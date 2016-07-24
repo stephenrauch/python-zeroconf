@@ -1727,7 +1727,15 @@ class Zeroconf(QuietLogger):
     def notify_all(self):
         """Notifies all waiting threads"""
         with self.condition:
-            self.condition.notify_all()
+            try:
+                self.condition.notify_all()
+            except RuntimeError:
+                # There is a bug in python 3.4 prior to 3.4.2 in which it is
+                # possible for threading.notify() to raise a runtime error
+                # http://bugs.python.org/issue22185
+
+                # retry notify_all() to hopefully insure everyone gets notified
+                self.condition.notify_all()  # second time the charm?
 
     def get_service_info(self, type_, name, timeout=3000):
         """Returns network's service information for a particular
