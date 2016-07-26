@@ -160,6 +160,10 @@ _HAS_A_TO_Z = re.compile(r'[A-Za-z]')
 _HAS_ONLY_A_TO_Z_NUM_HYPHEN = re.compile(r'^[A-Za-z0-9\-]+$')
 _HAS_ASCII_CONTROL_CHARS = re.compile(r'[\x00-\x1f\x7f]')
 
+try:
+    _WSAEINVAL = errno.WSAEINVAL
+except:
+    _WSAEINVAL = 0
 
 @enum.unique
 class InterfaceChoice(enum.Enum):
@@ -1688,6 +1692,9 @@ class Zeroconf(QuietLogger):
                         'Address not available when adding %s to multicast '
                         'group, it is expected to happen on some systems', i,
                     )
+                    continue
+                elif get_errno(e) == _WSAEINVAL:
+                    log.info('Address %s does not appear to be valid?', i)
                     continue
                 else:
                     raise
